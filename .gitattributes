@@ -1,0 +1,23 @@
+# Linux
+*.sh text eol=lf
+*.screen text eol=lf
+
+## Lighttpd stuff
+*.conf text eol=lf
+*.pem text eol=lf
+*.crt text eol=lf
+
+# Windows
+*.ps1 text eol=crlf
+
+# Both OS's
+*.lisp text
+*.asd text
+*.md text
+*.lock text
+qlfile text
+.gitignore text
+
+# Images
+*.png binary
+*.jpg binary

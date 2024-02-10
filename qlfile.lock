@@ -1,0 +1,24 @@
+("quicklisp" .
+ (:class qlot/source/dist:source-dist
+  :initargs (:distribution "https://beta.quicklisp.org/dist/quicklisp.txt" :%version :latest)
+  :version "2023-10-21"))
+("trivial-package-local-nicknames" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
+("trivial-features" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
+("trivial-indent" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
+("alexandria" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
+("cl-i" .
+ (:class qlot/source/git:source-git
+  :initargs (:remote-url "git@git.sr.ht:~skin/cl-i" :branch "main")
+  :version "git-2c5681b4db0a84e707ee20b8a0feb83424783b9e"))

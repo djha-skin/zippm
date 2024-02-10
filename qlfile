@@ -1,0 +1,5 @@
+ql trivial-package-local-nicknames
+ql trivial-features
+ql trivial-indent
+ql alexandria
+git cl-i git@git.sr.ht:~skin/cl-i :branch main

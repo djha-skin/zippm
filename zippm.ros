@@ -1,0 +1,24 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '() :silent t)
+  )
+
+(asdf:load-system "zippm")
+
+(defpackage :ros.script.zippm.3916575100
+  (:use :cl)
+  (:import-from #:skin.djha.zippm))
+(in-package :ros.script.zippm.3916575100)
+
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (skin.djha.zippm:entrypoint argv))
+
+
+;;; vim: set ft=lisp lisp:
