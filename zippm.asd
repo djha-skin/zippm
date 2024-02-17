@@ -8,7 +8,8 @@
   )
   :components ((:module "src"
                 :components
-                ((:file "main"))))
+                ((:file "main")
+                 (:file "version"))))
   :description ""
   :in-order-to ((test-op (test-op "zippm/tests"))))
 
@@ -20,6 +21,7 @@
                "rove")
   :components ((:module "tests"
                 :components
-                ((:file "main"))))
+                ((:file "main")
+                 (:file "version"))))
   :description "Test system for zippm"
   :perform (test-op (op c) (symbol-call :rove :run c)))

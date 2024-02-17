@@ -1,76 +1,51 @@
-;; A
 (defpackage #:skin.djha.zippm/version
   (:use :cl)
   (:import-from #:uiop)
   (:import-from #:alexandria)
   (:documentation
-    "A straight implementation in common lisp of the Debian Version Comparison Algorithm."))
+    "Version comparison for zippm"))
 
 (in-package #:skin.djha.zippm/version)
 
-(defun justify
-    (seq len &key make-array-args)
-    "Return a vector of the given length, with the given sequence justified to
-     the left."
-  (let ((justified (apply #'make-array
-                          (concatenate 'list
-                                       (list len)
-                                       make-array-args))))
-    (replace justified seq :start1 0 :end1 (min len
-                                                (length seq)))
-    justified))
-
-(defun rectify
-    (a b &rest make-array-args)
-  "Return two sequences of the same length, with the shorter one justified to
-  the left."
-  (let ((la (length a))
-        (lb (length b))
-        (maxlength (max la lb))
-        (ja (if (= maxlength la) a (justify a
-                                            maxlength
-                                            :make-array-args
-                                            make-array-args)))
-        (jb (if (= maxlength lb) b (justify b maxlength
-                                            :make-array-args
-                                            make-array-args))))
-    (values maxlength ja jb)))
-
-(defparameter *nullc* (code-char 0))
+(defparameter *trumpc* #\-)
+(defparameter *fillerc* #\Space)
 
 (defun nonnumeric-part-compare
     (a b)
-  (if (string= a b)
-      0
-      (multiple-value-bind
-          (maxlength ja jb)
-          (rectify a b
-                   :element-type 'char
-                   :initial-element *nullc*)
-        (loop for i from 0 below maxlength
-              for a = (elt ja i)
-              for b = (elt jb i)
-              do
-              (let ((diff
-                      (cond ((char= a b) 0)
-                            ((char= a #\~) -1)
-                            ((char= b #\~) 1)
-                            ((char= a *nullc*) -1)
-                            ((char= b *nullc*) 1)
-                            ((and (alpha-char-p a)
-                                  (not (alpha-char-p b))) -1)
-                            ((and (alpha-char-p b)
-                                  (not (alpha-char-p a))) 1)
-                            (:else
-                             (- (char-code a) (char-code b))))))
-                (when (not (zerop diff))
-                  (return diff)))
-              finally (return 0)))))
+  "
+  Compare two version parts which both consist entirely of
+  non-digits (or are empty).
+  "
+  (declare (type string a b))
+  (loop with maxlength = (max (length a) (length b))
+        for i from 0 below maxlength
+        for ca = (if (< i (length a))
+                     (elt a i)
+                     *fillerc*)
+        for cb = (if (< i (length b))
+                     (elt b i)
+                     *fillerc*)
+        do
+        (let ((diff
+                (cond ((char= ca cb) 0)
+                      ((char= ca *trumpc*) -1)
+                      ((char= cb *trumpc*) 1)
+                      ((and (alpha-char-p a)
+                            (not (alpha-char-p b))) -1)
+                      ((and (alpha-char-p b)
+                            (not (alpha-char-p a))) 1)
+                      (:else
+                       (- (char-code a) (char-code b))))))
+          (when (not (zerop diff))
+            (return diff)))
+        finally (return 0)))
 
 (defun numeric-part-compare
-  (a b)
-  "Compares two version parts, which both consist
-  entirely of digits."
+    (a b)
+  "
+  Compares two version parts, which both consist
+  entirely of digits (or are empty).
+  "
   (declare (type string a b))
   (let ((trimmed-a (string-left-trim '(#\0) a))
         (trimmed-b (string-left-trim '(#\0) b))
@@ -102,6 +77,11 @@
   "
   (declare (type string version))
   (loop
+    with parts = (make-array 10
+                             :element-type 'string
+                             :initial-element ""
+                             :adjustable t
+                             :fill-pointer 0)
     for i = 0 then (1+ i)
     for check = (if (zerop (mod i 2))
                     #'digit-char-p
@@ -111,7 +91,9 @@
                          (position-if check scratch)
                          (length scratch))
     while (not (zerop (length scratch)))
-    collect (subseq scratch 0 next-checked)))
+    do
+    (vector-push-extend (subseq scratch 0 next-checked) parts)
+    finally (return parts)))
 
 (defun epochless-vercmp (a b)
   "
@@ -122,14 +104,14 @@
       0
       (let ((split-a (version-parts-split a))
             (split-b (version-parts-split b)))
-        (multiple-value-bind
-            (maxlength ja jb)
-            (rectify split-a split-b
-                     :element-type 'string
-                     :initial-element "")
-          (loop for i = 0 then (1+ i)
-                for a across ja
-                for b across jb
+          (loop with maxlength = (max (length split-a) (length split-b))
+                for i = 0 below maxlength
+                for a = (if (< i (length split-a))
+                            (elt split-a i)
+                            "")
+                for b = (if (< i (length split-b))
+                            (elt split-b i)
+                            "")
                 for cmp = (version-part-compare i a b)
                 while (zerop cmp)
                 finally (return cmp))))))
