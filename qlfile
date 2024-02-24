@@ -2,4 +2,6 @@ ql trivial-package-local-nicknames
 ql trivial-features
 ql trivial-indent
 ql alexandria
+ql cl-semver
 git cl-i git@git.sr.ht:~skin/cl-i :branch main
+git nrdl git@git.sr.ht:~skin/nrdl :ref 0.3.0

@@ -18,7 +18,15 @@
  (:class qlot/source/ql:source-ql
   :initargs (:%version :latest)
   :version "ql-2023-10-21"))
+("cl-semver" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
 ("cl-i" .
  (:class qlot/source/git:source-git
   :initargs (:remote-url "git@git.sr.ht:~skin/cl-i" :branch "main")
   :version "git-2c5681b4db0a84e707ee20b8a0feb83424783b9e"))
+("nrdl" .
+ (:class qlot/source/git:source-git
+  :initargs (:remote-url "git@git.sr.ht:~skin/nrdl" :ref "0.3.0")
+  :version "git-0.3.0"))
