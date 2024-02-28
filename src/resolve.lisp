@@ -11,7 +11,8 @@
                 #:parse
                 #:?)
   (:export #:make-package-info
-  ))
+           #:package-info=)
+  )
 
 (in-package #:skin.djha.zippm/resolve)
 
@@ -172,7 +173,6 @@
       matches
       less-equal
       less-than
-      in-range
       not-equal
       equal-to)
     cl-semver:version)
@@ -261,8 +261,43 @@
    (declare (ignore colon at open-paren close-paren))
    (make-package-info name version (coerce location 'string) requirements)))
 
+(defun version-predicate= (a b)
+  (declare (type version-predicate a b))
+  (and
+    (eql (relation a) (relation b))
+    (cl-semver:version= (version a) (version b))))
 
 
+;; This does not test requirer equality, as that would cause an infinite loop,
+;; since it represents a cycle in the graph.
+(defun requirement= (a b)
+  (declare (type requirement a b))
+  (and
+    (eql (status a) (status b))
+    (string= (name a) (name b))
+    (every (lambda (x y)
+             (every (lambda (x y)
+                      (version-predicate= x y))
+                    x
+                    y))
+           (spec a)
+           (spec b))))
+
+(defun package-info= (a b)
+  (declare (type package-info a b))
+  (and
+    (string= (name a) (name b))
+    (cl-semver:version= (version a) (version b))
+    (string= (location a) (location b))
+    (every (lambda (x y)
+             (every (lambda (u v)
+                      (and (requirement= u v)
+                           (eq (requirer u) a)
+                           (eq (requirer v) b)))
+                    x
+                    y))
+           (requirements a)
+           (requirements b))))
 
 #+(or)
 (progn
@@ -271,8 +306,6 @@
   (requirer (parse 'version-requirement "!foo>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))
   (parse 'version-requirement "foo>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
   )
-
-
 
 #+(or)
 
@@ -295,12 +328,60 @@
         (parse 'version-requirement "for>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
         (parse 'version-requirement "baz>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))))
 
-
 (defun present (name &key spec)
   (make-instance 'requirement :status :present :name name :spec spec))
 
 (defun absent (name &key spec)
   (make-instance 'requirement :status :absent :name name :spec spec))
+
+
+(defun version-passes (ver pred)
+  (declare (type cl-semver:semantic-version version)
+           (type version-predicate pred))
+  (case (relation pred)
+    (:greater-than (cl-semver:version> ver (version pred)))
+    (:greater-equal (cl-semver:version>= ver (version pred)))
+    (:equal-to (cl-semver:version= ver (version pred)))
+    (:not-equal (cl-semver:version/= ver (version pred)))
+    (:less-equal (cl-semver:version<= ver (version pred)))
+    (:less-than (cl-semver:version< ver (version pred)))
+    (:pess-greater (and
+                     (cl-semver:version>= ver (version pred))
+                     (cl-semver:make-semantic-version
+                       :major
+                       (1+ (cl-semver:version-major ver))
+                       :minor 0
+                       :patch 0)))))
+
+(defmethod fulfills ((requirement requirement) (package package-info))
+  (and
+    (eql (status requirement) :present)
+    (string= (name requirement) (name package))
+    (every (lambda (spec)
+             (some (lambda (predicate)
+                     (cl-semver:satisfies? (version package) predicate))
+                   spec))
+           (spec requirement))))
+
+
+  (with-slots (name version requirements) package
+    (if (string= (name requirement) name)
+      (every (lambda (spec)
+               (some (lambda (predicate)
+                       (cl-semver:satisfies? version predicate))
+                     spec))
+             (spec requirement))
+      nil)))
+  (let ((name (name package))
+        (version (version package))
+        (requirements (requirements package)))
+    (if (string= (name requirement) name)
+      (every (lambda (spec)
+               (some (lambda (predicate)
+                       (cl-semver:satisfies? version predicate))
+                     spec))
+             (spec requirement))
+      nil)))
 
 
 

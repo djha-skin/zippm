@@ -125,9 +125,12 @@
                  (pio-string "seven-bros:1.2.3@/tmp/foo(adam>=1.2.3,<=1.9.7,!=1.5.0;><3.0.0|benjamin==89.1.0;==89.5.0;==94.1.0&!caleb|caleb>=5.0.0-alpha.3,<5.0.0&daniel)"))
              (ok (string= (format nil "~A" pio)
                           pio-string))
+             (ok (resolve:package-info= (esrap:parse 'resolve::package-info pio-string)
+                        pio))
              (ok (string= (format nil "~A" (esrap:parse 'resolve::package-info pio-string))
-                         pio-string)))))
+                         pio-string))
 
+(ok (
 
 
 
