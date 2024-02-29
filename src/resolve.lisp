@@ -1,5 +1,9 @@
 #+(or)
-(declaim (optimize (speed 0) (space 0) (debug 3)))
+(progn
+  (declaim (optimize (speed 0) (space 0) (debug 3)))
+  (dolist (x '(:cl-semver :alexandria :esrap :uiop))
+    (ql:quickload x)))
+
 (defpackage #:skin.djha.zippm/resolve
   (:use :cl)
   (:import-from #:uiop)
@@ -49,7 +53,8 @@
 (defmethod print-object ((obj version-predicate) strm)
   (format strm "~A"
           (gethash (relation obj) relation-strings))
-  (cl-semver:print-version (version obj) strm))
+  (cl-semver:print-version (version obj) strm)
+  obj)
 
 (deftype requirement-status ()
   '(member :present :absent)
@@ -80,7 +85,8 @@
   (cl-semver:print-version (version obj) strm)
   (format strm "@~A(~{~{~A~^|~}~^&~})"
           (location obj)
-          (requirements obj)))
+          (requirements obj))
+  obj)
 
 (deftype requirer ()
   '(or (member :root) package-info))
@@ -111,7 +117,8 @@
     (format strm "~:[!~;~]~A~{~{~A~^,~}~^;~}"
             (eql :present (status obj))
             (name obj)
-            (spec obj)))
+            (spec obj))
+  obj)
 
 (defun decorate (requirement requirer)
   (make-instance 'requirement
@@ -301,15 +308,17 @@
 
 #+(or)
 (progn
-  (parse 'version-predicate ">=1.2.3")
-  (parse 'vp-disjunction ">=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
+  
+  (multiple-value-bind (production position succeeded)
+      (parse 'version-predicate ">=1.2.3")
+    (list production position succeeded))
+  (+ (parse 'version-predicate ">=1.2.3") 3)
+  (parse 'vp-disjunction ">=1.2.3,<=2.0.0,>=1.5.0;><3.0.0,!=3.2.3")
   (requirer (parse 'version-requirement "!foo>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))
-  (parse 'version-requirement "foo>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
+  (parse 'version-requirement "foo>=1.2.3,<=2.0.0,>1.5.0;><3.0.0,!=3.2.3")
   )
 
 #+(or)
-
-
 ;; => seven-bros:1.2.3@/tmp/foo(adam>=1.2.3,<=1.9.7,!=1.5.0;><3.0.0|benjamin==89.1.0;==89.5.0;==94.1.0&!caleb|caleb>=5.0.0-alpha.3,<5.0.0&daniel)
 
 ;; This was for an older version that used parse, but we're going to use parse
@@ -322,7 +331,7 @@
   :requirements
   (list
     (list
-      (parse 'version-requirement "bar>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
+      (parse 'version-requirement "bar>=1.2.3,<=2.0.0,>=1.5.0;><3.0.0,!=3.2.3")
       (parse 'version-requirement "il>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))
     (list
         (parse 'version-requirement "for>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
