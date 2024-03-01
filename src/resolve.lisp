@@ -1,7 +1,7 @@
 #+(or)
 (progn
   (declaim (optimize (speed 0) (space 0) (debug 3)))
-  (dolist (x '(:cl-semver :alexandria :esrap :uiop))
+  (dolist (x '("uiop" "alexandria" "cl-semver" "esrap"))
     (ql:quickload x)))
 
 (defpackage #:skin.djha.zippm/resolve
@@ -48,10 +48,10 @@
    (version
      :type cl-semver:semantic-version
      :initarg :version :reader version))
-  (:documentation "A class to represent a version predicate."))
+  (:documentation "a class to represent a version predicate."))
 
 (defmethod print-object ((obj version-predicate) strm)
-  (format strm "~A"
+  (format strm "~a"
           (gethash (relation obj) relation-strings))
   (cl-semver:print-version (version obj) strm)
   obj)
@@ -62,28 +62,28 @@
 
 (defclass package-info ()
   ((name :initarg :name
-         :initform (error "A package name is required.")
+         :initform (error "a package name is required.")
          :type string
          :reader name)
    (version :initarg :version
             :type cl-semver:semantic-version
-            :initform (error "A package version is required.")
+            :initform (error "a package version is required.")
             :reader version)
    (location :initarg :location
              :type string
-             :initform (error "A package location is required.")
+             :initform (error "a package location is required.")
              :reader location)
    (requirements :initarg :requirements
                  :initform nil
                  :type list ;; of lists of version requirements
                  :reader requirements))
-  (:documentation "A class to represent package information."))
+  (:documentation "a class to represent package information."))
 
 (defmethod print-object ((obj package-info) strm)
-  (format strm "~A:"
+  (format strm "~a:"
           (name obj))
   (cl-semver:print-version (version obj) strm)
-  (format strm "@~A(~{~{~A~^|~}~^&~})"
+  (format strm "@~a(~{~{~a~^|~}~^&~})"
           (location obj)
           (requirements obj))
   obj)
@@ -93,8 +93,8 @@
 
 (defparameter *requirer* :root
   "
-  The requirer that will be used as the default requirer for requirements.
-  This field is mostly important when building the dependency graph, at the end.
+  the requirer that will be used as the default requirer for requirements.
+  this field is mostly important when building the dependency graph, at the end.
   ")
 
 (defclass requirement ()
@@ -111,10 +111,10 @@
              :type requirer
              :initform *requirer*
              :reader requirer))
-  (:documentation "A package requirement."))
+  (:documentation "a package requirement."))
 
 (defmethod print-object ((obj requirement) strm)
-    (format strm "~:[!~;~]~A~{~{~A~^,~}~^;~}"
+    (format strm "~:[!~;~]~a~{~{~a~^,~}~^;~}"
             (eql :present (status obj))
             (name obj)
             (spec obj))
@@ -127,7 +127,7 @@
     :spec (spec requirement)
     :requirer requirer))
 
-;; TODO test
+;; todo test
 (defun make-package-info (name version location requirements)
   (let* ((base-instance (make-instance 'package-info
                                        :name name
@@ -275,7 +275,7 @@
     (cl-semver:version= (version a) (version b))))
 
 
-;; This does not test requirer equality, as that would cause an infinite loop,
+;; this does not test requirer equality, as that would cause an infinite loop,
 ;; since it represents a cycle in the graph.
 (defun requirement= (a b)
   (declare (type requirement a b))
@@ -356,44 +356,44 @@
     (:less-than (cl-semver:version< ver (version pred)))
     (:pess-greater (and
                      (cl-semver:version>= ver (version pred))
-                     (cl-semver:make-semantic-version
-                       :major
-                       (1+ (cl-semver:version-major ver))
-                       :minor 0
-                       :patch 0)))))
+                     (cl-semver:version<
+                       ver
+                       (cl-semver:make-semantic-version
+                         (1+ (cl-semver:version-major (version pred))) 0 0))))))
 
-(defmethod fulfills ((requirement requirement) (package package-info))
-  (and
-    (eql (status requirement) :present)
-    (string= (name requirement) (name package))
-    (every (lambda (spec)
-             (some (lambda (predicate)
-                     (cl-semver:satisfies? (version package) predicate))
-                   spec))
-           (spec requirement))))
-
-
-  (with-slots (name version requirements) package
-    (if (string= (name requirement) name)
-      (every (lambda (spec)
-               (some (lambda (predicate)
-                       (cl-semver:satisfies? version predicate))
-                     spec))
-             (spec requirement))
-      nil)))
-  (let ((name (name package))
-        (version (version package))
-        (requirements (requirements package)))
-    (if (string= (name requirement) name)
-      (every (lambda (spec)
-               (some (lambda (predicate)
-                       (cl-semver:satisfies? version predicate))
-                     spec))
-             (spec requirement))
-      nil)))
-
-
-
-
-(defgeneric fulfills (requirement package)
-  (:documentation "A generic function to determine if a package fulfills a requirement."))
+;(defun requirement-fulfills (req pkg)
+;  (declare (type requirement req)
+;           (type package-info pkg))
+;  (and
+;    (eql (status requirement) :present)
+;    (string= (name requirement) (name package))
+;    (every (lambda (spec)
+;             (some (lambda (predicate)
+;                     (cl-semver:satisfies? (version package) predicate))
+;                   spec))
+;           (spec requirement))))
+;
+;  (with-slots (name version requirements) package
+;    (if (string= (name requirement) name)
+;      (every (lambda (spec)
+;               (some (lambda (predicate)
+;                       (cl-semver:satisfies? version predicate))
+;                     spec))
+;             (spec requirement))
+;      nil)))
+;  (let ((name (name package))
+;        (version (version package))
+;        (requirements (requirements package)))
+;    (if (string= (name requirement) name)
+;      (every (lambda (spec)
+;               (some (lambda (predicate)
+;                       (cl-semver:satisfies? version predicate))
+;                     spec))
+;             (spec requirement))
+;      nil)))
+;
+;
+;
+;
+;(defgeneric fulfills (requirement package)
+;  (:documentation "A generic function to determine if a package fulfills a requirement."))
