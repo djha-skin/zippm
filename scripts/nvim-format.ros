@@ -20,20 +20,14 @@ exec ros -Q -- $0 "$@"
        (uiop/filesystem:directory-files)
        (remove-if-not (lambda (x) (string= (pathname-type x) "lisp")))))
 
-(defun main (&rest argv)
-  (declare (ignorable argv))
-   (let ((flag-file (probe-file "./skin.djha.zippm.asd")))
-     (when (not flag-file)
-       (format *error-output* "We are not in a git repository~%")
-       (uiop:quit 1))
-     (let* ((root-path (uiop/os:getcwd))
-            (format-files
+(defun format-files (root-path)
+    (let ((to-do
               (concatenate 'list
                            (lisp-files (merge-pathnames "./src/" root-path))
                            (lisp-files (merge-pathnames "./tests/" root-path))
                            '("skin.djha.zippm.asd"
                            "zippm.ros"))))
-       (loop for file in format-files
+       (loop for file in to-do
              do
              (uiop:run-program
                `("nvim"
@@ -42,8 +36,14 @@ exec ros -Q -- $0 "$@"
                  "normal gg=G"
                  "-c"
                  "wq"
-                 ,(namestring
-                   (pathname-name file))))))))
-#+(or)
-(main)
+                 ,(namestring file))))))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+   (let ((flag-file (probe-file "./skin.djha.zippm.asd")))
+     (when (not flag-file)
+       (format *error-output* "We are not in a git repository~%")
+       (uiop:quit 1))
+     (let ((root-path (uiop/os:getcwd)))
+       (format-files root-path))))
 ;;; vim: set ft=lisp lisp:

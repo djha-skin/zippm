@@ -5,7 +5,8 @@
 #+(or)
 (progn
   (declaim (optimize (speed 0) (space 0) (debug 3)))
-  (asdf:load-system "skin.djha.zippm/resolve")
+  (asdf:load-system "skin.djha.zippm")
+  (asdf:test-system "skin.djha.zippm")
   (dolist (x '("uiop" "alexandria" "cl-semver" "esrap"))
     (asdf:load-system x)))
 

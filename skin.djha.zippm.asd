@@ -2,18 +2,16 @@
 	   :version "0.1.0"
 	   :author "Daniel Jay Haskin"
 	   :license "MIT"
-	   :depends-on (
-			"cl-i"
+	   :depends-on ("cl-i"
 			"esrap"
 			"cl-semver"
-			"alexandria"
-			)
+			"alexandria")
 	   :components ((:module "src"
 				 :components
 				 ((:file "main")
 				  (:file "resolve"))))
 	   :description ""
-	   :in-order-to ((test-op (test-op "skin.djha.zippm/tests"))))
+	   :in-order-to ((asdf:test-op (asdf:test-op "skin.djha.zippm/tests"))))
 
 (defsystem "skin.djha.zippm/tests"
 	   :author "Daniel Jay Haskin"
@@ -23,9 +21,13 @@
 			"parachute")
 	   :components ((:module "tests"
 				 :components
-				 ((:file "resolve"))))
+				 ((:file "main")
+				  (:file "resolve"))))
 	   :description "Test system for zippm"
-	   :perform (test-op (op c)
-			     (uiop:symbol-call
-			       :parachute
-			       :test #:skin.djha.zippm/tests/resolve)))
+	   :perform (asdf:test-op (op c)
+				  (uiop:symbol-call
+				    :parachute
+				    :test :skin.djha.zippm/tests)
+				  (uiop:symbol-call
+				    :parachute
+				    :test :skin.djha.zippm/tests/resolve)))
