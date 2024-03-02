@@ -1,8 +1,12 @@
+;;;; This is a package for resolving package dependencies.
+;;;; In the first part we have basic plumbing for dependency resolution;
+;;;; the actual dependency resolving function is at the bottom.
 #+(or)
 (progn
   (declaim (optimize (speed 0) (space 0) (debug 3)))
+  (asdf:load-system "skin.djha.zippm/resolve")
   (dolist (x '("uiop" "alexandria" "cl-semver" "esrap"))
-    (ql:quickload x)))
+    (asdf:load-system x)))
 
 (defpackage #:skin.djha.zippm/resolve
   (:use :cl)
@@ -15,8 +19,7 @@
                 #:parse
                 #:?)
   (:export #:make-package-info
-           #:package-info=)
-  )
+           #:package-info=))
 
 (in-package #:skin.djha.zippm/resolve)
 
@@ -32,13 +35,13 @@
 
 (deftype version-relation ()
   '(member
-            :greater-than
-            :greater-equal
-            :equal-to
-            :not-equal
-            :less-equal
-            :less-than
-            :pess-greater)
+     :greater-than
+     :greater-equal
+     :equal-to
+     :not-equal
+     :less-equal
+     :less-than
+     :pess-greater)
   )
 
 (defclass version-predicate ()
@@ -114,18 +117,18 @@
   (:documentation "a package requirement."))
 
 (defmethod print-object ((obj requirement) strm)
-    (format strm "~:[!~;~]~a~{~{~a~^,~}~^;~}"
-            (eql :present (status obj))
-            (name obj)
-            (spec obj))
+  (format strm "~:[!~;~]~a~{~{~a~^,~}~^;~}"
+          (eql :present (status obj))
+          (name obj)
+          (spec obj))
   obj)
 
 (defun decorate (requirement requirer)
   (make-instance 'requirement
-    :status (status requirement)
-    :name (name requirement)
-    :spec (spec requirement)
-    :requirer requirer))
+                 :status (status requirement)
+                 :name (name requirement)
+                 :spec (spec requirement)
+                 :requirer requirer))
 
 ;; todo test
 (defun make-package-info (name version location requirements)
@@ -149,6 +152,12 @@
 
 (defrule pess-greater "><"
   (:constant :pess-greater))
+
+;;;; make sure I'm in good territory
+;;;; with that one roswell bug.
+#+(or)
+(parse 'pess-greater "><")
+
 
 (defrule greater-equal ">="
   (:constant :greater-equal))
@@ -195,8 +204,8 @@
         version-predicate)))
   (:destructure (vp others)
    (cons vp
-   (loop for (_ vps) in others
-        collect vps))))
+         (loop for (_ vps) in others
+               collect vps))))
 
 (defrule vp-disjunction
   (and
@@ -207,13 +216,13 @@
         vp-conjunction)))
   (:destructure (vpc others)
    (cons vpc
-   (loop for (_ vpcs) in others
-        collect vpcs))))
+         (loop for (_ vpcs) in others
+               collect vpcs))))
 
 (defrule package-name
-    (+ (not (or #\: #\@ #\( #\) #\& #\| #\! #\, #\; #\> #\< #\=)))
+  (+ (not (or #\: #\@ #\( #\) #\& #\| #\! #\, #\; #\> #\< #\=)))
   (:lambda (name)
-   (coerce name 'string)))
+    (coerce name 'string)))
 
 
 (defrule version-requirement
@@ -238,8 +247,8 @@
         vr-disjunction)))
   (:destructure (vrc others)
    (cons vrc
-   (loop for (_ vrcs) in others
-        collect vrcs))))
+         (loop for (_ vrcs) in others
+               collect vrcs))))
 
 (defrule vr-disjunction
   (and
@@ -250,8 +259,8 @@
         version-requirement)))
   (:destructure (vr others)
    (cons vr
-   (loop for (_ vrs) in others
-        collect vrs))))
+         (loop for (_ vrs) in others
+               collect vrs))))
 
 (defrule package-info
   (and
@@ -263,7 +272,7 @@
     #\(
     (? vr-conjunction)
     #\)
-  )
+    )
   (:destructure (name colon version at location open-paren requirements close-paren)
    (declare (ignore colon at open-paren close-paren))
    (make-package-info name version (coerce location 'string) requirements)))
@@ -308,7 +317,7 @@
 
 #+(or)
 (progn
-  
+
   (multiple-value-bind (production position succeeded)
       (parse 'version-predicate ">=1.2.3")
     (list production position succeeded))
@@ -325,17 +334,17 @@
 ;; elsewhere instead.
 #+(or)
 (make-instance 'package-info
-  :name "foo"
-  :version (cl-semver:read-version-from-string "1.2.3")
-  :location "/tmp/foo"
-  :requirements
-  (list
-    (list
-      (parse 'version-requirement "bar>=1.2.3,<=2.0.0,>=1.5.0;><3.0.0,!=3.2.3")
-      (parse 'version-requirement "il>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))
-    (list
-        (parse 'version-requirement "for>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
-        (parse 'version-requirement "baz>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))))
+               :name "foo"
+               :version (cl-semver:read-version-from-string "1.2.3")
+               :location "/tmp/foo"
+               :requirements
+               (list
+                 (list
+                   (parse 'version-requirement "bar>=1.2.3,<=2.0.0,>=1.5.0;><3.0.0,!=3.2.3")
+                   (parse 'version-requirement "il>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))
+                 (list
+                   (parse 'version-requirement "for>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3")
+                   (parse 'version-requirement "baz>=1.2.3,<=2.0.0,=>1.5.0;><3.0.0,!=3.2.3"))))
 
 (defun present (name &key spec)
   (make-instance 'requirement :status :present :name name :spec spec))
@@ -362,38 +371,38 @@
                          (1+ (cl-semver:version-major (version pred))) 0 0))))))
 
 ;(defun requirement-fulfills (req pkg)
-;  (declare (type requirement req)
-;           (type package-info pkg))
-;  (and
-;    (eql (status requirement) :present)
-;    (string= (name requirement) (name package))
-;    (every (lambda (spec)
-;             (some (lambda (predicate)
-;                     (cl-semver:satisfies? (version package) predicate))
-;                   spec))
-;           (spec requirement))))
+   ;  (declare (type requirement req)
+   ;           (type package-info pkg))
+   ;  (and
+   ;    (eql (status requirement) :present)
+   ;    (string= (name requirement) (name package))
+   ;    (every (lambda (spec)
+                 ;             (some (lambda (predicate)
+                                       ;                     (cl-semver:satisfies? (version package) predicate))
+                                       ;                   spec))
+                                       ;           (spec requirement))))
 ;
 ;  (with-slots (name version requirements) package
-;    (if (string= (name requirement) name)
-;      (every (lambda (spec)
-;               (some (lambda (predicate)
-;                       (cl-semver:satisfies? version predicate))
-;                     spec))
-;             (spec requirement))
-;      nil)))
+     ;    (if (string= (name requirement) name)
+              ;      (every (lambda (spec)
+                              ;               (some (lambda (predicate)
+                                                      ;                       (cl-semver:satisfies? version predicate))
+                                                      ;                     spec))
+                                                      ;             (spec requirement))
+            ;      nil)))
 ;  (let ((name (name package))
 ;        (version (version package))
 ;        (requirements (requirements package)))
-;    (if (string= (name requirement) name)
-;      (every (lambda (spec)
-;               (some (lambda (predicate)
-;                       (cl-semver:satisfies? version predicate))
-;                     spec))
-;             (spec requirement))
-;      nil)))
+     ;    (if (string= (name requirement) name)
+              ;      (every (lambda (spec)
+                              ;               (some (lambda (predicate)
+                                                      ;                       (cl-semver:satisfies? version predicate))
+                                                      ;                     spec))
+                                                      ;             (spec requirement))
+            ;      nil)))
 ;
 ;
 ;
 ;
 ;(defgeneric fulfills (requirement package)
-;  (:documentation "A generic function to determine if a package fulfills a requirement."))
+   ;  (:documentation "A generic function to determine if a package fulfills a requirement."))

@@ -1,3 +1,6 @@
+#+(or)
+(asdf:load-system "skin.djha.zippm")
+
 (defpackage #:skin.djha.zippm
   (:use :cl)
   (:import-from #:uiop)

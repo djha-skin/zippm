@@ -22,6 +22,10 @@
  (:class qlot/source/ql:source-ql
   :initargs (:%version :latest)
   :version "ql-2023-10-21"))
+("esrap" .
+ (:class qlot/source/ql:source-ql
+  :initargs (:%version :latest)
+  :version "ql-2023-10-21"))
 ("cl-i" .
  (:class qlot/source/git:source-git
   :initargs (:remote-url "git@git.sr.ht:~skin/cl-i" :branch "main")
@@ -30,3 +34,7 @@
  (:class qlot/source/git:source-git
   :initargs (:remote-url "git@git.sr.ht:~skin/nrdl" :ref "0.3.0")
   :version "git-0.3.0"))
+("trivial-formatter" .
+ (:class qlot/source/git:source-git
+  :initargs (:remote-url "git@github.com:hyotang666/trivial-formatter" :branch "master")
+  :version "git-994777bb2e6bbf539726a77a8262909e31c95d46"))
