@@ -4,6 +4,7 @@ ql trivial-indent
 ql alexandria
 ql cl-semver
 ql esrap
+ql parachute
 git cl-i git@git.sr.ht:~skin/cl-i :branch main
 git nrdl git@git.sr.ht:~skin/nrdl :ref 0.3.0
 
