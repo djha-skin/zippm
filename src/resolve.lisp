@@ -346,3 +346,38 @@
                        vp-dnf-clause))
               (vp-dnf req)))))
 
+(define-condition 'resolution-error
+  ((present-packages :initarg :present-packages
+                     :initform (error "a list of present packages is required.")
+                     :reader present-packages)
+   (found-packages :initarg :found-packages
+                   :initform
+                   :reader found-packages)
+   (absent-requirements :initarg :absent-requirements
+                        :reader absent-requirements)
+   (cnf-clauses :initarg :cnf-clauses
+                :reader cnf-clauses)
+   (reason :initarg :reason
+                  :reader reason)
+   (
+  (:report
+    (lambda (c s)
+      (format s "resolution error: ~a" c))))
+(defun make-resolution-error
+    (present-packages
+(defun resolve-dependencies
+    (repo
+     present-packages
+     found-packages
+     absent-requirements
+     cnf-clauses
+     package-graph)
+  (if (null cnf-clauses)
+      (values
+        :successful
+        package-graph)
+      (let ((fclause (first clauses))
+            (rclause (rest clauses)))
+        (with-slots (status name vp-dnf requirer) fclause
+
+
